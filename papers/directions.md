@@ -12,9 +12,9 @@ audience:           LEWG, Direction Group
 ---------------------------------------------------------------------
 
 # Abstract
-This paper outlines the problems with current I/O facilities in C++, high level
-directions and goals of future fundamental I/O facilities, and integration with
-the existing and future standard library.
+This paper outlines the problems with current I/O facilities in C++, directions
+and goals of future fundamental I/O facilities, and an outline of a suite of
+customization points and concepts.
 
 # Change Log
 

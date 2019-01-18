@@ -108,9 +108,13 @@ This makes iostreams an inappropriate choice for systems that are particularly
 sensitive to the correctness of error handling at I/O boundaries where exact
 failure modes must be known.
 
-## Inability for Standard C++ to Access Memory Mapped Files
-TODO(consult Niall for wording in this section)
-...
+## Inability for Standard C++ to Access Shared Memory and Memory Mapped Files
+In [P1026] N. Douglas discusses the need for language support in standard C++
+to correctly access shared memory and memory mapped files. The general problem
+consists in the memory and object models' lack of support for interacting with
+memory that is changed by other programs. This presents a major problem for
+ensuring the correctness and long-term support of large scale C++ systems that
+will continue to rely, and rely more heavily on, shared memory technologies.
 
 We believe these limitations, among others, are what lead C++ software systems
 to frequently reinvent fundamental I/O abstractions, or to limit themselves to
@@ -202,13 +206,14 @@ Lastly, aside from those parts of [P1031] mentioned above, our immediate
 efforts should avoid in-depth specification of filesystem interaction.
 
 # Open Questions
-1. [P1026] proposed creation of a _Data Persistence Study Group_. The work
-   suggested in the current paper and future work in this space could benefit
-   from a dedicated venue for discussion. The ambitious goals listed above also
-   suggest the need to seek out guidance and input from domain experts in, at
-   the very least, systems and kernel development, high performance computing,
-   and embedded systems development. Should a new study group be formed for
-   this purpose?
+1. [P1026] proposed creation of a _Elsewhere Memory Study Group_ (formerly
+   suggested as a _Data Persistence Study Group_). The work suggested in the
+   current paper and future work in this space could benefit from a dedicated
+   venue for discussion. The ambitious goals listed above also suggest the need
+   to seek out guidance and input from domain experts in, at the very least,
+   systems and kernel development, high performance computing, and embedded
+   systems development as stakeholders in the future of C++ library support for
+   I/O. Should a new study group be formed for this purpose?
 
 2. In what time frame do we want to ship a library implementing the vocabulary
    suggested above? We expect that with enough effort a minimally viable

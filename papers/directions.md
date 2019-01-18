@@ -54,7 +54,8 @@ must either enable or be sufficiently orthogonal to the above to allow for
 seamless and efficient integration with existing and future libraries in this
 space.
 
-# Problems with the Status Quo
+# Motivation
+## Problems with the Status Quo
 Recent papers submitted to WG21 ([P1031], [P1026], [N4412]) along with numerous
 blog posts and articles written by members of the C++ users community have
 discussed the shortcomings of the existing C++ I/O facilities. These concerns
@@ -63,7 +64,7 @@ support in C++ for efficiently and correctly accessing certain features of
 operating systems in hosted environments. For context we will summarize those
 we find to be most relevant to the current discussion.
 
-## Conflated Concerns of `std::basic_streambuf`
+### Conflated Concerns of `std::basic_streambuf`
 At a minimum, `std::basic_streambuf` concerns itself with underlying I/O device
 creation & control, maintenance of and seeking within streaming read and/or
 write state, actual transfer of bytes from and to the read and/or write state,
@@ -78,7 +79,7 @@ This also makes it needlessly difficult to extend iostreams. Writing a custom
 `std::basic_streambuf` requires consideration of all of these concerns, where
 typically one wants nothing more than a data source or sink.
 
-## Limited Efficiency of `std::basic_streambuf`
+### Limited Efficiency of `std::basic_streambuf`
 When buffered -- the typical case for both implementation and usage --
 `std::basic_streambuf` imposes additional copies of data for each I/O
 operation. In [P1031] and [P1026] N. Douglas discusses the effects these
@@ -96,7 +97,7 @@ multiple byte arrays in a single invocation.
 The unavoidable conclusion is that C++ programs are fundamentally limited in
 the performance of their I/O subsystems when using iostreams.
 
-## Obfuscation of I/O Errors
+### Obfuscation of I/O Errors
 The iostreams interface provides no portable way to determine the root cause of
 failure when reading from or writing to a stream's underlying device encounters
 an error. This is a simple consequence of the employed type erasure mechanism.
@@ -108,7 +109,7 @@ This makes iostreams an inappropriate choice for systems that are particularly
 sensitive to the correctness of error handling at I/O boundaries where exact
 failure modes must be known.
 
-## Inability for Standard C++ to Access Shared Memory and Memory Mapped Files
+### Inability for Standard C++ to Access Shared Memory and Memory Mapped Files
 In [P1026] N. Douglas discusses the need for language support in standard C++
 to correctly access shared memory and memory mapped files. The general problem
 consists in the memory and object models' lack of support for interacting with
@@ -121,7 +122,7 @@ to frequently reinvent fundamental I/O abstractions, or to limit themselves to
 consuming only the lowest-level, inexpressive, and error-prone I/O facilities
 provided by the operating system, C standard library, or hardware drivers.
 
-# Goals, Expectations, and Requirements
+## Goals, Expectations, and Requirements
 Our principal goal is to develop a common vocabulary of concepts, customization
 points, and algorithms for connecting I/O devices (sources and sinks) to
 consumers and producers of binary data. This vocabulary should be amenable to
@@ -185,7 +186,7 @@ with the common vocabulary we are suggesting.
 TODO(consult others on potential requirements not listed here)
 ...
 
-# Non-Goals
+## Non-Goals
 As mentioned in the introduction, there are a number of things we do not mean by
 I/O. Each of these comprises, therefore, a non-goal.
 
@@ -204,6 +205,56 @@ before that bridge is crossed, if at all.
 
 Lastly, aside from those parts of [P1031] mentioned above, our immediate
 efforts should avoid in-depth specification of filesystem interaction.
+
+# Design
+What follows is a high-level description of a library of customization points
+and concepts. It is intended as a prototype rather than a specification, and as
+material to provoke further discussion. We use the identifier `IOError` as a
+currently unspecified type or concept to be determined later (as described
+above, an adaptable mechanism for communicating errors will be needed).
+
+## Transferable Types
+We need a set of concepts to distinguish types that can be transferred across
+I/O boundaries, written to or read from buffers, and so on without additional
+modification in such a way that their representation determines their value.
+Hence, these should pick out scalar types without padding bits and
+user-defined, trivially copyable types without padding types composed thereof.
+Hence, we have
+
+```
+template <class T>
+concept UniquelyRepresented = std::has_unique_object_representations_v <T>;
+
+template <class T>
+concept TriviallyBufferable = TriviallyCopyable <T> && UniquelyRepresented <T>;
+```
+
+Certain I/O algorithms also have a need to inspect buffers at intermediate
+steps to, for instance, search within a range of bytes transferred thus far.
+For generality and to sidestep language restrictions around inspecting object
+representations at compile time (e.g. one cannot in general perform a
+`static_cast<std::byte const *>()` in a `constexpr` function), we propose a
+concept to distinguish types that behave sufficiently like bytes for the
+purposes of I/O.
+
+```
+template <class T>
+concept Byte = TriviallyBufferable <T> && Regular <T> && sizeof (T) == 1;
+```
+
+We also need concepts to distinguish range types whose contents can be
+transferred in the same way.
+
+```
+template <class Rng>
+concept TriviallyBufferableRange = ranges::ContiguousRange <Rng> &&
+    ranges::SizedRange <Rng> &&
+    TriviallyBufferable <ranges::iter_value_t <ranges::iterator_t <Rng>>>;
+
+template <class Rng>
+concept ByteRange = TriviallyBufferableRange <Rng> &&
+    Byte <ranges::iter_value_t <ranges::iterator_t <Rng>>>;
+```
 
 # Open Questions
 1. [P1026] proposed creation of a _Elsewhere Memory Study Group_ (formerly

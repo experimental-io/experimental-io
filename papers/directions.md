@@ -233,7 +233,7 @@ Certain I/O algorithms also have a need to inspect buffers at intermediate
 steps to, for instance, search within a range of bytes transferred thus far.
 For generality and to sidestep language restrictions around inspecting object
 representations at compile time (e.g. one cannot in general perform a
-`static_cast<std::byte const *>()` in a `constexpr` function), we propose a
+`static_cast<const std::byte*>()` in a `constexpr` function), we propose a
 concept to distinguish types that behave sufficiently like bytes for the
 purposes of I/O.
 
@@ -255,6 +255,83 @@ template <class Rng>
 concept ByteRange = TriviallyBufferableRange <Rng> &&
     Byte <ranges::iter_value_t <ranges::iterator_t <Rng>>>;
 ```
+
+## Buffer Customization Points and Concepts
+From ranges of transferable types we can produce views over existing memory for
+I/O algorithms to consume:
+
+```
+template <class T>
+    requires Byte <std::remove_cv_t <T>>
+class basic_buffer
+{
+public:
+    // ...
+    constexpr T * data () const noexcept;
+    constexpr std::size_t size () const noexcept;
+};
+```
+
+Customization points can bridge the gap between contiguous ranges for which
+the library can automatically synthesize a `basic_buffer` and user-defined
+types that wish to opt-in to providing a view over, say, some internal memory
+region to be written from or read into. We propose two customization point
+objects.
+
+```
+/* implementation defined */ buffer;
+/* implementation defined */ const_buffer;
+```
+
+The former, `buffer`, produces views of type `basic_buffer <T>`, where `T` may
+be a qualified type `const U` depending on the argument to `buffer`, whereas
+the latter always produces views of type `basic_buffer <const T>`.
+
+A concept `Buffer` should distinguish the types of expressions we can provide
+to `buffer` and `const_buffer` to compute those views over memory. Two
+additional concepts can distinguish when we can only read from a memory region
+versus read from write into a memory region computed by `buffer`:
+
+```
+template <class T>
+concept ConstBuffer = Buffer <T>;
+template <class T>
+concept MutableBuffer = Buffer <T> && _IsMutableBuffer <T>;
+```
+
+Where `_IsMutableBuffer` is an exposition only concept testing whether the
+computed `basic_buffer` views a read only memory region (i.e., whether `T` in
+`basic_buffer <T>` is a qualified type `const U`).
+
+I/O algorithms that operate on sequences of buffers should be constrained with
+analogous concepts:
+
+```
+template <class Rng>
+concept BufferRange = ranges::ForwardRange <Rng> &&
+    Buffer <ranges::iter_reference_t <ranges::iterator_t <Rng>>>;
+template <class Rng>
+concept ConstBufferRange = BufferRange <Rng>;
+template <class T>
+concept MutableBufferRange = BufferRange <Rng> &&
+    MutableBuffer <ranges::iter_reference_t <ranges::iterator_t <Rng>>>;
+```
+
+The Networking TS currently makes use of a named type requirement
+`DynamicBuffer`. We should also provide a concept matching a similar
+specification.
+
+Notice that by using ranges and the customization points `buffer` and
+`const_buffer` in our concept specifications we make available the full breadth
+and depth of the C++ Ranges library for use in implementing and using the
+library components proposed herein. Experimental work in implementing this
+vocabulary has proved this approach to be tremendously expressive.
+
+## Device Customization Points and Concepts
+TODO
+
+## Future Work
+TODO
 
 # Open Questions
 1. [P1026] proposed creation of a _Elsewhere Memory Study Group_ (formerly

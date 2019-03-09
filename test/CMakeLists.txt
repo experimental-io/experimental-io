@@ -1,7 +1,14 @@
 #
 # std::experimental::io
 #
-
+#   Copyright Dalton M. Woodard 2019
+#
+#   Use, modification and distribution is subject to the Boost Software
+#   License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+#   http://www.boost.org/LICENSE_1_0.txt)
+#
+# https://github.com/experimental-io/experimental-io
+#
 add_library(xio-test-config INTERFACE)
 
 target_link_libraries(xio-test-config INTERFACE xio)
@@ -11,13 +18,13 @@ target_compile_options(xio-test-config INTERFACE
   -march=native -ftemplate-backtrace-limit=0
   $<$<CXX_COMPILER_ID:GNU>:
     -Wall -Wextra
-    -Wconversion -Wold-style-cast -Wfloat-equal
-    -Wlogical-op -Wundef -Wredundant-decls
-    -Wshadow -Wwrite-strings -Wpointer-arith
+    -Wconversion -Wfloat-equal
+    -Wlogical-op -Wredundant-decls
+    -Wwrite-strings -Wpointer-arith
     -Wformat=2 -Wswitch-default -Wcast-qual
     -Wcast-align -Wswitch-enum -Wnon-virtual-dtor
     -Wctor-dtor-privacy -Wdisabled-optimization
-    -Winvalid-pch -Wnoexcept -Wmissing-declarations
+    -Winvalid-pch -Wmissing-declarations
     -Woverloaded-virtual -Wdouble-promotion
     -Wtrampolines -Wzero-as-null-pointer-constant
     -Wuseless-cast -Wvector-operation-performance
@@ -49,6 +56,9 @@ if(NOT Catch2_FOUND)
     FetchContent_GetProperties(catch2)
     if(NOT catch2_POPULATED)
         FetchContent_Populate(catch2)
+        set(CATCH_BUILD_TESTING OFF CACHE BOOL "")
+        set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
+        set(CATCH_INSTALL_HELPERS OFF CACHE BOOL "")
         add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
     endif()
 endif()
@@ -56,7 +66,8 @@ endif()
 function(add_xio_test TESTNAME EXENAME FIRSTSOURCE)
   add_executable(${EXENAME} ${FIRSTSOURCE} ${ARGN})
   target_link_libraries(${EXENAME} xio-test-config Catch2::Catch2)
-  add_test(${TESTNAME} ${EXENAME})
+  add_test(NAME ${TESTNAME} COMMAND $<TARGET_FILE:${EXENAME}>)
+  add_dependencies(xio-check ${EXENAME})
 endfunction()
 
-add_xio_test(empty empty empty-test.cpp)
+add_xio_test(test.empty empty empty-test.cpp)

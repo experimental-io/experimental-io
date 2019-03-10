@@ -29,8 +29,7 @@ find_package(cmcstl2 CONFIG QUIET)
 if(NOT cmcstl2_FOUND)
     FetchContent_Declare(
         cmcstl2
-        GIT_REPOSITORY https://github.com/daltonwoodard/cmcstl2.git
-        GIT_TAG cmake-adjustment-for-subproject
+        GIT_REPOSITORY https://github.com/CaseyCarter/cmcstl2.git
     )
     FetchContent_GetProperties(cmcstl2)
     if(NOT cmcstl2_POPULATED)

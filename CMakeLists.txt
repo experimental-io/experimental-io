@@ -15,13 +15,14 @@ include(FetchContent)
 
 project(experimental-io CXX)
 
-# check if xio is a subproject
+# check if xio is being built standalone
 if(CMAKE_CURRENT_LIST_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(XIO_NOT_SUBPROJECT ON)
+    option(XIO_BUILD_TESTING "Build xio tests" ON)
+else()
+    option(XIO_BUILD_TESTING "Build xio tests" OFF)
 endif()
 
 option(XIO_WERROR "Use -Werror compiler flag" ON)
-option(XIO_BUILD_TESTING "Build xio tests" ON)
 
 # required cmcstl2 dependency
 find_package(cmcstl2 CONFIG QUIET)
@@ -59,9 +60,7 @@ file(WRITE ${PROJECT_BINARY_DIR}/experimental-io-config.cmake
 install(FILES ${PROJECT_BINARY_DIR}/experimental-io-config.cmake
     DESTINATION lib/cmake/experimental-io)
 
-# only enable the test suite if xio is being built as a standalone project
-# or a test build is requested
-if(XIO_NOT_SUBPROJECT OR XIO_BUILD_TESTING)
+if(XIO_BUILD_TESTING)
     include(CTest)
     add_custom_target(xio-check ${CMAKE_CTEST_COMMAND} -V)
     add_subdirectory(test)

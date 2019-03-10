@@ -18,13 +18,13 @@ target_compile_options(xio-test-config INTERFACE
   -march=native -ftemplate-backtrace-limit=0
   $<$<CXX_COMPILER_ID:GNU>:
     -Wall -Wextra
-    -Wconversion -Wfloat-equal
+    -Wconversion -Wold-style-cast -Wfloat-equal
     -Wlogical-op -Wredundant-decls
     -Wwrite-strings -Wpointer-arith
     -Wformat=2 -Wswitch-default -Wcast-qual
     -Wcast-align -Wswitch-enum -Wnon-virtual-dtor
     -Wctor-dtor-privacy -Wdisabled-optimization
-    -Winvalid-pch -Wmissing-declarations
+    -Winvalid-pch -Wnoexcept -Wmissing-declarations
     -Woverloaded-virtual -Wdouble-promotion
     -Wtrampolines -Wzero-as-null-pointer-constant
     -Wuseless-cast -Wvector-operation-performance

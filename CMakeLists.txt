@@ -41,6 +41,7 @@ if(NOT cmcstl2_FOUND)
 endif()
 
 add_library(xio INTERFACE)
+target_include_directories(xio SYSTEM INTERFACE $<TARGET_PROPERTY:stl2,INTERFACE_INCLUDE_DIRECTORIES>)
 target_link_libraries(xio INTERFACE stl2)
 target_include_directories(xio INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

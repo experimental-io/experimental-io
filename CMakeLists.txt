@@ -9,6 +9,9 @@
 #
 # https://github.com/experimental-io/experimental-io
 #
+# This CMakeLists.txt was adapted from that of Casey Carter's cmcstl2:
+#   https://github.com/CaseyCarter/cmcstl2
+#
 cmake_minimum_required(VERSION 3.13)
 
 include(FetchContent)

@@ -9,6 +9,9 @@
 #
 # https://github.com/experimental-io/experimental-io
 #
+# This CMakeLists.txt was adapted from that of Casey Carter's cmcstl2:
+#   https://github.com/CaseyCarter/cmcstl2
+#
 add_library(xio-test-config INTERFACE)
 
 target_link_libraries(xio-test-config INTERFACE xio)
